@@ -1,0 +1,53 @@
+paige-
+n8n workflows:
+1. Document Generation & Delivery (Already Mapped)
+
+The Job: Catching structured data from your Node.js AI endpoints, formatting it, converting it to PDFs, and emailing it to users.
+
+Use Cases: Business Plans, Startup Checklists, and Funding Readiness Reports.
+
+Two Credentials to Configure Before Activating
+Credential |	Node |	Where to Get It
+HTTP Basic Auth	HTTP | Convert HTML to PDF	pdfshift.io | free tier, API key as username, blank password
+SMTP	Email | Send Plan to User |	Your mail provider (Gmail, SendGrid, Mailgun, etc.)
+
+2. Marketplace Order Routing
+
+The Job: Managing the "Service Marketplace." When a user purchases a premium service (like "Personal Brand Development" or a "Done-For-You Online Business"), this workflow catches the payment confirmation.
+
+Action: It creates a task ticket in the Admin Dashboard, alerts the relevant service provider or consultant, and sends a receipt and onboarding next-steps email to the user.
+
+Setup Checklist-
+Node	What to Replace
+A — Slack: Notify Internal Team	URL → your Slack Incoming Webhook URL (get one here)
+A — Email: Receipt + Calendly Link	https://calendly.com/YOUR_CALENDLY_LINK/strategy-intensive → your real Calendly URL
+B — Email: Onboarding Questionnaire	https://YOUR_FORM_LINK/... → your Typeform / Google Form URL
+B — ClickUp: Create Fulfillment Task	YOUR_CLICKUP_LIST_ID + YOUR_CLICKUP_API_TOKEN → from ClickUp Settings → Apps
+Both email nodes	SMTP credential → same "LaunchPad SMTP" credential from Workflow 1
+
+Prefer Trello over ClickUp? In node B — ClickUp: Create Fulfillment Task, change the URL to https://api.trello.com/1/cards and switch to query parameters: key, token, idList, name, desc.
+
+3. Automated Appointment Booking
+
+The Job: Handling the logistics for one-on-one services, specifically the "CEO Strategy Intensive" mentioned in the platform specs.
+
+Action: Syncing the booking calendar, creating calendar invites for both the admin and the user, and sending 24-hour and 1-hour automated email/SMS reminders.
+
+4. Automated Email Follow-ups (Drip Campaigns)
+
+The Job: Keeping users engaged with the platform.
+
+Action: Sending welcome emails when they first sign up, "nudging" them if they abandon the Business Builder wizard halfway through, and sending upsell emails to encourage them to buy premium marketplace services.
+
+5. AI Lead Generation Workflows
+
+The Job: Running background tasks to find potential business for the platform itself or for the users.
+
+Action: Scraping specific directories or platforms, using a quick AI prompt to qualify the lead, and dropping the clean data into a CRM or database.
+
+6. AI Social Media Automation
+
+The Job: Managing marketing output.
+
+Action: Operating on a cron-job (schedule) to take AI-generated content, format it, and auto-post it to connected social media accounts without human intervention.
+

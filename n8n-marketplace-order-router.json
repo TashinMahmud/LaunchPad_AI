@@ -1,0 +1,214 @@
+{
+  "name": "LaunchPad AI — Service Marketplace Order Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketplace-order",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000001",
+      "name": "Webhook — Receive Order",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 400],
+      "webhookId": "launchpad-marketplace-order"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.servicePurchased }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "CEO Strategy Intensive"
+            },
+            {
+              "value2": "Done-For-You Online Business"
+            }
+          ]
+        },
+        "fallbackOutput": 2
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000002",
+      "name": "Switch — Route by Service",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "fromEmail": "concierge@launchpad-ai.com",
+        "toEmail": "={{ $('Webhook — Receive Order').item.json.body.userEmail }}",
+        "subject": "={{ '✅ Payment Confirmed — CEO Strategy Intensive | Receipt #LP-' + Date.now().toString().slice(-6) }}",
+        "emailType": "html",
+        "message": "={{ '<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1a1a2e\">' + '<div style=\"border-bottom:3px solid #e94560;padding-bottom:16px;margin-bottom:24px\">' + '<h1 style=\"font-size:24px;margin:0;color:#16213e\">🎉 You are Officially Booked!</h1>' + '</div>' + '<p style=\"font-size:15px\">Hi <strong>' + $('Webhook — Receive Order').item.json.body.userName + '</strong>,</p>' + '<p style=\"font-size:15px\">Thank you for investing in yourself! Your payment of <strong>$' + $('Webhook — Receive Order').item.json.body.amountPaid + '</strong> for the <strong>CEO Strategy Intensive</strong> has been successfully received.</p>' + '<p style=\"font-size:15px\">Your next step is to book your 1:1 session using the link below. Choose a time that works best for you — we cannot wait to dig into your business strategy together.</p>' + '<div style=\"text-align:center;margin:32px 0\">' + '<a href=\"https://calendly.com/YOUR_CALENDLY_LINK/strategy-intensive\" style=\"background:#e94560;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block\">📅 Schedule Your Strategy Call</a>' + '</div>' + '<hr style=\"border:none;border-top:1px solid #eee;margin:24px 0\"/>' + '<p style=\"font-size:13px;color:#888\"><strong>Payment Receipt</strong><br/>Service: CEO Strategy Intensive<br/>Amount Paid: $' + $('Webhook — Receive Order').item.json.body.amountPaid + '<br/>Date: ' + new Date().toLocaleDateString(\"en-US\",{year:\"numeric\",month:\"long\",day:\"numeric\"}) + '</p>' + '<p style=\"font-size:13px;color:#aaa;margin-top:24px\">LaunchPad AI — Your AI-Powered Business Concierge</p>' + '</div>' }}",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000003",
+      "name": "A — Email: Receipt + Calendly Link",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [720, 200],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "LaunchPad SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ '🔥 *HIGH-TICKET ALERT — CEO Strategy Intensive Booked!*\\n\\n• *Client:* ' + $('Webhook — Receive Order').item.json.body.userName + '\\n• *Email:* ' + $('Webhook — Receive Order').item.json.body.userEmail + '\\n• *Amount Paid:* $' + $('Webhook — Receive Order').item.json.body.amountPaid + '\\n• *Time:* ' + new Date().toLocaleString() + '\\n\\nPlease prepare for the call and reach out to confirm the booking.' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000004",
+      "name": "A — Slack: Notify Internal Team",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 400],
+      "notes": "SETUP REQUIRED: Replace the URL with your Slack Incoming Webhook URL. Create one at https://api.slack.com/messaging/webhooks in 2 minutes."
+    },
+    {
+      "parameters": {
+        "fromEmail": "concierge@launchpad-ai.com",
+        "toEmail": "={{ $('Webhook — Receive Order').item.json.body.userEmail }}",
+        "subject": "={{ '🚀 Welcome to Your Done-For-You Business Build, ' + $('Webhook — Receive Order').item.json.body.userName + '!' }}",
+        "emailType": "html",
+        "message": "={{ '<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1a1a2e\">' + '<div style=\"border-bottom:3px solid #e94560;padding-bottom:16px;margin-bottom:24px\">' + '<h1 style=\"font-size:24px;margin:0;color:#16213e\">🚀 Your Build Starts Now!</h1>' + '</div>' + '<p style=\"font-size:15px\">Hi <strong>' + $('Webhook — Receive Order').item.json.body.userName + '</strong>,</p>' + '<p style=\"font-size:15px\">Welcome aboard! Your payment of <strong>$' + $('Webhook — Receive Order').item.json.body.amountPaid + '</strong> for the <strong>Done-For-You Online Business</strong> package has been confirmed. Our fulfillment team has already been notified and is gearing up for your project.</p>' + '<p style=\"font-size:15px\">To get started, please complete your onboarding questionnaire. This helps us understand your vision, preferences, and goals so we can build exactly what you have in mind.</p>' + '<div style=\"text-align:center;margin:32px 0\">' + '<a href=\"https://YOUR_FORM_LINK/onboarding-questionnaire\" style=\"background:#e94560;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block\">📋 Complete Your Onboarding Form</a>' + '</div>' + '<p style=\"font-size:15px\">Once we receive your form, a member of our team will reach out within <strong>1 business day</strong> to kick things off. We are so excited to build something great with you!</p>' + '<hr style=\"border:none;border-top:1px solid #eee;margin:24px 0\"/>' + '<p style=\"font-size:13px;color:#888\"><strong>Payment Receipt</strong><br/>Service: Done-For-You Online Business<br/>Amount Paid: $' + $('Webhook — Receive Order').item.json.body.amountPaid + '<br/>Date: ' + new Date().toLocaleDateString(\"en-US\",{year:\"numeric\",month:\"long\",day:\"numeric\"}) + '</p>' + '<p style=\"font-size:13px;color:#aaa;margin-top:24px\">LaunchPad AI — Your AI-Powered Business Concierge</p>' + '</div>' }}",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000005",
+      "name": "B — Email: Onboarding Questionnaire",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [720, 600],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "LaunchPad SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.clickup.com/api/v2/list/YOUR_CLICKUP_LIST_ID/task",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "YOUR_CLICKUP_API_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ '🆕 New DFY Build — ' + $('Webhook — Receive Order').item.json.body.userName + ' ($' + $('Webhook — Receive Order').item.json.body.amountPaid + ')' }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ '**Done-For-You Online Business — New Project**\\n\\n**Client Name:** ' + $('Webhook — Receive Order').item.json.body.userName + '\\n**Client Email:** ' + $('Webhook — Receive Order').item.json.body.userEmail + '\\n**Service Purchased:** ' + $('Webhook — Receive Order').item.json.body.servicePurchased + '\\n**Amount Paid:** $' + $('Webhook — Receive Order').item.json.body.amountPaid + '\\n**Order Date:** ' + new Date().toLocaleString() + '\\n\\n**Next Step:** Wait for client to complete onboarding questionnaire, then schedule kickoff call.' }}"
+            },
+            {
+              "name": "priority",
+              "value": "2"
+            },
+            {
+              "name": "status",
+              "value": "to do"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000006",
+      "name": "B — ClickUp: Create Fulfillment Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 800],
+      "notes": "SETUP REQUIRED: (1) Replace YOUR_CLICKUP_LIST_ID with the ID of your fulfillment list (found in the list URL). (2) Replace YOUR_CLICKUP_API_TOKEN with your ClickUp personal API token from https://app.clickup.com/settings/apps. Prefer Trello? Replace this node with a POST to https://api.trello.com/1/cards with your Trello key/token/idList."
+    }
+  ],
+  "connections": {
+    "Webhook — Receive Order": {
+      "main": [
+        [
+          {
+            "node": "Switch — Route by Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch — Route by Service": {
+      "main": [
+        [
+          {
+            "node": "A — Email: Receipt + Calendly Link",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "A — Slack: Notify Internal Team",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B — Email: Onboarding Questionnaire",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "B — ClickUp: Create Fulfillment Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1c2d3e4-f5a6-7890-bcde-f12345678902",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "launchpad-ai"
+  },
+  "id": "launchpad-ai-marketplace-order-router",
+  "tags": [
+    {
+      "createdAt": "2026-04-03T00:00:00.000Z",
+      "updatedAt": "2026-04-03T00:00:00.000Z",
+      "id": "1",
+      "name": "LaunchPad AI"
+    }
+  ]
+}

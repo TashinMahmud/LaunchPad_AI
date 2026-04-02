@@ -1,0 +1,243 @@
+{
+  "name": "LaunchPad AI — AI Lead Generation & Outreach",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-generation",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000001",
+      "name": "Webhook — Receive Prospect",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 400],
+      "webhookId": "launchpad-lead-generation",
+      "notes": "Payload: { \"prospectWebsite\": \"https://example.com\", \"prospectName\": \"John Doe\" }"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.body.prospectWebsite }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "htmlContent"
+            }
+          },
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 3
+            }
+          }
+        }
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000002",
+      "name": "HTTP Request — Scrape Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 400],
+      "notes": "Fetches raw HTML from the prospect's homepage. A real User-Agent header is set to reduce the chance of a bot-block 403. If the site uses heavy JavaScript rendering, consider upgrading this node to use a Browserless or ScrapingBee HTTP Request instead."
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "sourceData": "json",
+        "dataPropertyName": "htmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "bodyText",
+              "cssSelector": "body",
+              "returnValue": "text",
+              "returnArray": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000003",
+      "name": "HTML Extract — Get Body Text",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [\n  {\n    role: 'system',\n    content: 'You are an elite B2B sales copywriter. Review the provided website text for this prospect. Write a short, highly personalized 3-sentence cold email offering LaunchPad AI\\'s \\'Done-For-You Online Business\\' service. Mention a specific detail from their website to prove it is not an automated email. Sign off as \"The LaunchPad AI Team\". Return ONLY the email body text — no subject line, no extra formatting.'\n  },\n  {\n    role: 'user',\n    content: 'Prospect Name: ' + $('Webhook — Receive Prospect').item.json.body.prospectName + '\\nWebsite: ' + $('Webhook — Receive Prospect').item.json.body.prospectWebsite + '\\n\\nWebsite Content (first 4000 chars):\\n' + $('HTML Extract — Get Body Text').item.json.bodyText.substring(0, 4000)\n  }\n] }}"
+            },
+            {
+              "name": "max_tokens",
+              "value": 400
+            },
+            {
+              "name": "temperature",
+              "value": 0.8
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000004",
+      "name": "HTTP Request — Generate Cold Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [960, 400],
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "OpenAI API"
+        }
+      },
+      "notes": "SETUP REQUIRED: Create an 'OpenAI API' credential in n8n with your OpenAI API key. The email draft is available from this node at: $json.choices[0].message.content"
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lead Tracker",
+          "mode": "name"
+        },
+        "dataMode": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "Date",
+              "fieldValue": "={{ new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}"
+            },
+            {
+              "fieldId": "Prospect Name",
+              "fieldValue": "={{ $('Webhook — Receive Prospect').item.json.body.prospectName }}"
+            },
+            {
+              "fieldId": "Website URL",
+              "fieldValue": "={{ $('Webhook — Receive Prospect').item.json.body.prospectWebsite }}"
+            },
+            {
+              "fieldId": "Email Draft",
+              "fieldValue": "={{ $('HTTP Request — Generate Cold Email').item.json.choices[0].message.content }}"
+            }
+          ]
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000005",
+      "name": "Google Sheets — Log to Lead Tracker",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.1,
+      "position": [1200, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "notes": "SETUP REQUIRED: (1) Create a Google Sheet named 'Lead Tracker' with header row: Date | Prospect Name | Website URL | Email Draft. (2) Copy the Sheet ID from its URL (the long alphanumeric string between /d/ and /edit). (3) Create a Google Sheets OAuth2 credential in n8n and authorize it with your Google account. Replace YOUR_GOOGLE_SHEET_ID in this node's Document ID field."
+    }
+  ],
+  "connections": {
+    "Webhook — Receive Prospect": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request — Scrape Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request — Scrape Website": {
+      "main": [
+        [
+          {
+            "node": "HTML Extract — Get Body Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Extract — Get Body Text": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request — Generate Cold Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request — Generate Cold Email": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets — Log to Lead Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c1d2e3f4-a5b6-7890-cdef-012345678903",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "launchpad-ai"
+  },
+  "id": "launchpad-ai-lead-generation",
+  "tags": [
+    {
+      "createdAt": "2026-04-03T00:00:00.000Z",
+      "updatedAt": "2026-04-03T00:00:00.000Z",
+      "id": "1",
+      "name": "LaunchPad AI"
+    }
+  ]
+}
