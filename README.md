@@ -7,10 +7,11 @@
 [![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](#zod-request-schema-validation)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)](#dual-provider-ai-strategy-controller)
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude--3.5-D97706?style=for-the-badge&logo=anthropic&logoColor=white)](#dual-provider-ai-strategy-controller)
+[![Groq](https://img.shields.io/badge/Groq-llama--3.3-orange?style=for-the-badge)](#dual-provider-ai-strategy-controller)
 
 ---
 
-**LaunchPad AI** is a professional-grade Node.js strategy engine designed to help founders analyze business viability, evaluate funding matches, and draft comprehensive business proposals. Powered by **Express**, **Zod**, **OpenAI**, and **Anthropic Claude**, it provides fully validated idea diagnostics and strategy generation.
+**LaunchPad AI** is a professional-grade Node.js strategy engine designed to help founders analyze business viability, evaluate funding matches, and draft comprehensive business proposals. Powered by **Express**, **Zod**, **OpenAI**, **Anthropic Claude**, and **Groq**, it provides fully validated idea diagnostics and strategy generation.
 
 </div>
 
@@ -72,12 +73,13 @@ Validates input payloads at the route layer. Zod intercepts malformed payloads b
 </details>
 
 <details>
-<summary><b>🤖 Dual-Provider AI Strategy Controller</b></summary>
+<summary><b>🤖 Multi-Provider AI Strategy Controller</b></summary>
 
 Integrates a provider strategy loader:
 *   **OpenAI GPT-4o-mini**: Executes JSON schema-enforced runs.
 *   **Anthropic Claude 3.5 Sonnet**: Employs structural prompt parsing.
-The active provider is determined by changing `AI_PROVIDER` (`openai` | `anthropic`) inside the environment variables.
+*   **Groq API**: Offers extremely fast, cost-effective completions using models like `llama-3.3-70b-versatile` with compatible JSON schema parsing support.
+The active provider is determined by changing `AI_PROVIDER` (`openai` | `anthropic` | `groq`) inside the environment variables.
 </details>
 
 <details>
@@ -102,9 +104,11 @@ Standardizes API responses during execution errors. If an LLM times out or crede
 2.  Set your credentials:
     ```env
     PORT=8000
-    AI_PROVIDER=openai
+    AI_PROVIDER=openai # openai | anthropic | groq
     OPENAI_API_KEY=sk-proj-your-key-here
     ANTHROPIC_API_KEY=sk-ant-your-key-here
+    GROQ_API_KEY=gsk_your-key-here
+    GROQ_MODEL=llama-3.3-70b-versatile
     ```
 
 ### 3. Installation & Run
