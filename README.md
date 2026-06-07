@@ -8,6 +8,8 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)](#dual-provider-ai-strategy-controller)
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude--3.5-D97706?style=for-the-badge&logo=anthropic&logoColor=white)](#dual-provider-ai-strategy-controller)
 [![Groq](https://img.shields.io/badge/Groq-llama--3.3-orange?style=for-the-badge)](#dual-provider-ai-strategy-controller)
+<br/>
+[![Live Demo](https://img.shields.io/badge/Demo-launchpad--ai--xp0e.onrender.com-FF5733?style=for-the-badge&logo=google-chrome&logoColor=white)](https://launchpad-ai-xp0e.onrender.com)
 
 ---
 
