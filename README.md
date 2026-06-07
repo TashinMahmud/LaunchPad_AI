@@ -1,187 +1,131 @@
-# LaunchPad AI — Backend API
+# 🚀 LaunchPad AI — Startup Valuation & Business Plan Engine
 
-An AI-powered business analysis REST API. Send a raw business idea, get back a fully structured analysis report powered by GPT-4o Structured Outputs.
+<div align="center">
 
----
-
-## 🗂️ Project Structure
-
-```
-LaunchPad_Ai/
-├── app/
-│   ├── api/
-│   │   ├── index.js                    # Central API router
-│   │   └── routes/
-│   │       └── analyzeIdea.route.js    # POST /api/analyze-idea
-│   ├── core/
-│   │   └── config.js                   # Env var loading & validation
-│   ├── schemas/
-│   │   └── analyzeIdea.schema.js       # Zod + OpenAI JSON Schema
-│   ├── services/
-│   │   └── openai.service.js           # OpenAI GPT-4o integration
-│   └── utils/
-│       └── errorHandler.js             # Global Express error middleware
-├── .env                                # Your secrets (git-ignored)
-├── .env.example                        # Safe template to commit
-├── server.js                           # App entry point
-└── package.json
-```
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18%2B-000000?style=for-the-badge&logo=express&logoColor=white)](#getting-started)
+[![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](#zod-request-schema-validation)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)](#dual-provider-ai-strategy-controller)
+[![Anthropic](https://img.shields.io/badge/Anthropic-Claude--3.5-D97706?style=for-the-badge&logo=anthropic&logoColor=white)](#dual-provider-ai-strategy-controller)
 
 ---
 
-## ⚡ Quick Start
+**LaunchPad AI** is a professional-grade Node.js strategy engine designed to help founders analyze business viability, evaluate funding matches, and draft comprehensive business proposals. Powered by **Express**, **Zod**, **OpenAI**, and **Anthropic Claude**, it provides fully validated idea diagnostics and strategy generation.
 
-### 1. Install dependencies
+</div>
 
+---
+
+## 🛠️ Technical Architecture
+
+LaunchPad AI functions as a modular business intelligence microservice.
+
+```
++-------------------------------------------------------------+
+|                      CLIENT INGESTION                       |
+|   Submits Pitch / Idea Details  <--->  Receives Reports     |
++------------------------------+------------------------------+
+                               | (HTTP POST /api/analyze-idea)
+                               v
++-------------------------------------------------------------+
+|                      EXPRESS APP ROUTER                     |
+|  Validates JSON body structures via Zod validation schemas  |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|               STRATEGY CONTROLLER COORDINATOR               |
+|  Loads settings and routes to OpenAI/Anthropic based on env  |
++------------------------------+------------------------------+
+                               |
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
++-----------------------+               +-----------------------+
+|  OPENAI GPT SERVICE   |               |  ANTHROPIC CLAUDE SVC |
+|  - JSON mode parser   |               |  - System prompts     |
+|  - GPT-4o-mini engine |               |  - Claude 3.5 Sonnet  |
++-----------------------+               +-----------------------+
+```
+
+### Core Code Modules & Responsibilities
+
+*   App Entry:
+    *   [`server.js`](server.js): Initializes the Express application, configures CORS, binds logging, and handles the registration of the global exception catcher.
+*   `app/api/` Layer:
+    *   [`index.js`](app/api/index.js): Centralized API router mounting endpoint routes and exposing the system health route.
+    *   [`routes/analyzeIdea.route.js`](app/api/routes/analyzeIdea.route.js): Implements the idea analysis POST route, running request validation before triggering AI analysis.
+*   `app/schemas/` Layer:
+    *   [`analyzeIdea.schema.js`](app/schemas/analyzeIdea.schema.js): Zod structural validation schemas specifying strict type, length, and format boundaries.
+*   `app/services/` Layer:
+    *   [`ai.service.js`](app/services/ai.service.js): Unified strategy controller dynamically resolving completions via OpenAI or Anthropic models depending on the config variables.
+*   `app/utils/` Layer:
+    *   [`errorHandler.js`](app/utils/errorHandler.js): Catches all route errors, formats message outputs, and sets appropriate HTTP status codes.
+
+---
+
+## ⚡ Core Integration Interfaces
+
+<details>
+<summary><b>📐 Zod Request Schema Validation</b></summary>
+
+Validates input payloads at the route layer. Zod intercepts malformed payloads before they hit LLM APIs, returning detailed validation reports containing exact field failure summaries.
+</details>
+
+<details>
+<summary><b>🤖 Dual-Provider AI Strategy Controller</b></summary>
+
+Integrates a provider strategy loader:
+*   **OpenAI GPT-4o-mini**: Executes JSON schema-enforced runs.
+*   **Anthropic Claude 3.5 Sonnet**: Employs structural prompt parsing.
+The active provider is determined by changing `AI_PROVIDER` (`openai` | `anthropic`) inside the environment variables.
+</details>
+
+<details>
+<summary><b>🔒 Global Exception Handler Middleware</b></summary>
+
+Standardizes API responses during execution errors. If an LLM times out or credentials fail, the controller bubbles up the error to a central Express middleware, shielding system directories and outputting clean JSON messages.
+</details>
+
+---
+
+## 🚀 Getting Started
+
+### 1. Requirements
+*   Node.js 18+
+*   npm or pnpm package manager
+
+### 2. Configurations Setup
+1.  Copy `.env.example` to a new `.env` file:
+    ```bash
+    cp .env.example .env
+    ```
+2.  Set your credentials:
+    ```env
+    PORT=8000
+    AI_PROVIDER=openai
+    OPENAI_API_KEY=sk-proj-your-key-here
+    ANTHROPIC_API_KEY=sk-ant-your-key-here
+    ```
+
+### 3. Installation & Run
+Install dependencies:
 ```bash
 npm install
 ```
 
-### 2. Configure environment variables
-
+Start the server:
 ```bash
-# Copy the template
-cp .env.example .env
-```
-
-Open `.env` and add your OpenAI API key:
-```
-OPENAI_API_KEY=sk-your-real-key-here
-PORT=5000
-```
-
-### 3. Start the server
-
-```bash
-# Development (auto-restarts on file changes)
-npm run dev
-
-# Production
+# Start in production mode
 npm start
-```
 
-You should see:
+# Start in development mode (with nodemon)
+npm run dev
 ```
-┌─────────────────────────────────────────────────┐
-│          🚀  LaunchPad AI — Backend API          │
-├─────────────────────────────────────────────────┤
-│  Status : ✅  Running                            │
-│  Port   : 5000                                  │
-│  Health : http://localhost:5000/api/health       │
-│  Endpoint: POST /api/analyze-idea               │
-└─────────────────────────────────────────────────┘
-```
+The server will start at `http://localhost:8000`. You can verify execution status by pinging:
+`http://localhost:8000/api/health`
 
 ---
 
-## 📡 API Reference
+## 📜 License
 
-### `GET /api/health`
-
-Confirms the server is running.
-
-**Response `200`:**
-```json
-{
-  "success": true,
-  "status": "OK",
-  "service": "LaunchPad AI API",
-  "timestamp": "2024-08-01T12:00:00.000Z"
-}
-```
-
----
-
-### `POST /api/analyze-idea`
-
-Analyzes a raw business idea using GPT-4o and returns a structured report.
-
-**Request Body:**
-```json
-{
-  "businessIdea": "A mobile app that connects local farmers with urban consumers for fresh produce delivery"
-}
-```
-
-**Constraints:**
-- `businessIdea` is required.
-- Minimum 10 characters, maximum 2000 characters.
-
-**Success Response `200`:**
-```json
-{
-  "success": true,
-  "report": {
-    "title": "FarmDrop",
-    "overallOpportunityScore": 78,
-    "executiveSummary": "...",
-    "marketDemand": {
-      "score": 8,
-      "reasons": ["...", "...", "..."]
-    },
-    "competitionLevel": {
-      "score": 6,
-      "mainCompetitors": "...",
-      "marketSaturation": "...",
-      "competitiveGap": "..."
-    },
-    "profitPotential": {
-      "monthlyRevenueRange": "$3,000 - $8,000",
-      "startupCostEstimate": "$1,000 - $3,000",
-      "breakEvenTimeframe": "4 - 8 months"
-    },
-    "riskAssessment": {
-      "level": "Medium",
-      "risks": [
-        { "risk": "...", "mitigation": "..." }
-      ]
-    },
-    "industryTrends": ["...", "...", "..."],
-    "recommendedStructure": {
-      "type": "LLC",
-      "reason": "..."
-    }
-  }
-}
-```
-
-**Validation Error `400`:**
-```json
-{
-  "success": false,
-  "message": "Validation failed. Please check your request.",
-  "errors": [
-    { "field": "businessIdea", "message": "businessIdea must be at least 10 characters long." }
-  ]
-}
-```
-
-**Server Error `500`:**
-```json
-{
-  "success": false,
-  "message": "An internal server error occurred. Please try again."
-}
-```
-
----
-
-## 🧪 Testing with curl
-
-```bash
-# Health check
-curl http://localhost:5000/api/health
-
-# Analyze an idea
-curl -X POST http://localhost:5000/api/analyze-idea \
-  -H "Content-Type: application/json" \
-  -d '{"businessIdea": "A subscription box service that delivers curated art supplies for hobbyist painters every month"}'
-```
-
----
-
-## 🔮 Planned Future Phases
-
-- **Phase 2**: MongoDB/PostgreSQL persistence — save reports to a user's Documents Vault
-- **Phase 3**: JWT + OAuth 2.0 authentication middleware
-- **Phase 4**: Rate limiting and usage quotas per user tier
+This project is licensed under the [MIT License](LICENSE).
