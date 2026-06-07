@@ -17,7 +17,7 @@ import "dotenv/config";
 // Validate the AI_PROVIDER value at startup — it controls the entire engine.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VALID_PROVIDERS = ["openai", "anthropic"];
+const VALID_PROVIDERS = ["openai", "anthropic", "groq"];
 const aiProvider = (process.env.AI_PROVIDER || "openai").toLowerCase();
 
 if (!VALID_PROVIDERS.includes(aiProvider)) {
@@ -38,7 +38,7 @@ console.log(`🔧  AI Engine configured → provider: "${aiProvider}"`);
 export const config = {
   port: parseInt(process.env.PORT, 10) || 5000,
 
-  /** Which AI provider is active. Either 'openai' or 'anthropic'. */
+  /** Which AI provider is active. Either 'openai', 'anthropic', or 'groq'. */
   aiProvider,
 
   openai: {
@@ -51,6 +51,12 @@ export const config = {
     /** May be undefined — checked at runtime inside the service. */
     apiKey: process.env.ANTHROPIC_API_KEY,
     model: "claude-3-5-sonnet-20241022",
+  },
+
+  groq: {
+    /** May be undefined — checked at runtime inside the service. */
+    apiKey: process.env.GROQ_API_KEY,
+    model: process.env.GROQ_MODEL || "llama-3.3-70b-specdec",
   },
 
   /**

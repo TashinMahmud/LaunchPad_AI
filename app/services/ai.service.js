@@ -261,6 +261,62 @@ const callAnthropic = async (businessIdea) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BRANCH C: Groq (via OpenAI-compatible base URL)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const callGroq = async (businessIdea) => {
+  if (!config.groq.apiKey) {
+    throw makeError(
+      'AI_PROVIDER is set to "groq" but GROQ_API_KEY is missing from your .env file.',
+      500
+    );
+  }
+
+  const client = new OpenAI({
+    apiKey: config.groq.apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  console.log(`🤖  [Groq] Sending to ${config.groq.model}...`);
+
+  let response;
+  try {
+    const systemPromptWithSchema = `${ANALYSIS_SYSTEM_PROMPT}\n\nYou MUST respond with a valid JSON object matching this schema:\n${JSON.stringify(openAiJsonSchema.schema, null, 2)}`;
+    response = await client.chat.completions.create({
+      model: config.groq.model,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPromptWithSchema },
+        {
+          role: "user",
+          content: `Please analyze the following business idea and generate a full report:\n\n"${businessIdea}"`,
+        },
+      ],
+      max_tokens: 3000,
+    });
+  } catch (apiError) {
+    console.error("🔴  [Groq] API call failed:", apiError.message);
+    throw makeError(
+      "Failed to connect to Groq. Please check your API key and try again.",
+      502
+    );
+  }
+
+  const choice = response.choices[0];
+
+  if (!choice.message?.content) {
+    throw makeError("Groq returned an empty response. Please try again.", 500);
+  }
+
+  try {
+    return JSON.parse(choice.message.content);
+  } catch {
+    console.error("🔴  [Groq] JSON parse failed:", choice.message.content);
+    throw makeError("Groq returned a malformed response. Please try again.", 500);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CHAT BRANCH A: OpenAI — Conversational reply
 // Plain chat completions call. No structured output — we want a natural string.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -363,6 +419,51 @@ const chatAnthropic = async (messages) => {
   return reply;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAT BRANCH C: Groq — Conversational reply
+// ─────────────────────────────────────────────────────────────────────────────
+
+const chatGroq = async (messages) => {
+  if (!config.groq.apiKey) {
+    throw makeError(
+      'AI_PROVIDER is set to "groq" but GROQ_API_KEY is missing from your .env file.',
+      500
+    );
+  }
+
+  const client = new OpenAI({
+    apiKey: config.groq.apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  console.log(`💬  [Groq] Chat turn → ${messages.length} message(s) in history...`);
+
+  let response;
+  try {
+    response = await client.chat.completions.create({
+      model: config.groq.model,
+      messages: [
+        { role: "system", content: CHAT_SYSTEM_PROMPT },
+        ...messages,
+      ],
+      max_tokens: 400,
+      temperature: 0.7,
+    });
+  } catch (apiError) {
+    console.error("🔴  [Groq Chat] API call failed:", apiError.message);
+    throw makeError(
+      "Failed to connect to Groq. Please check your API key and try again.",
+      502
+    );
+  }
+
+  const reply = response.choices[0].message?.content?.trim();
+  if (!reply) {
+    throw makeError("Groq returned an empty reply. Please try again.", 500);
+  }
+
+  return reply;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FUNDING SYSTEM PROMPT
@@ -540,6 +641,70 @@ const fundingAnthropic = async (userProfile) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FUNDING BRANCH C: Groq — Structured Outputs via JSON mode
+// ─────────────────────────────────────────────────────────────────────────────
+
+const fundingGroq = async (userProfile) => {
+  if (!config.groq.apiKey) {
+    throw makeError(
+      'AI_PROVIDER is set to "groq" but GROQ_API_KEY is missing from your .env file.',
+      500
+    );
+  }
+
+  const client = new OpenAI({
+    apiKey: config.groq.apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  const profileSummary =
+    `Business Type: ${userProfile.businessType}\n` +
+    `Location: ${userProfile.location}\n` +
+    `Stage: ${userProfile.stage}\n` +
+    `Credit Estimate: ${userProfile.creditEstimate}`;
+
+  console.log(`💰  [Groq] Finding funding matches for: ${userProfile.location} / ${userProfile.stage}...`);
+
+  let response;
+  try {
+    const systemPromptWithSchema = `${FUNDING_SYSTEM_PROMPT}\n\nYou MUST respond with a valid JSON object containing a "matches" key whose value is an array of funding objects matching this schema:\n${JSON.stringify(fundingOpenAiJsonSchema.schema, null, 2)}`;
+    response = await client.chat.completions.create({
+      model: config.groq.model,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPromptWithSchema },
+        {
+          role: "user",
+          content:
+            `Find the best 3-4 funding opportunities for this entrepreneur:\n\n${profileSummary}`,
+        },
+      ],
+      max_tokens: 3000,
+    });
+  } catch (apiError) {
+    console.error("🔴  [Groq Funding] API call failed:", apiError.message);
+    throw makeError(
+      "Failed to connect to Groq. Please check your API key and try again.",
+      502
+    );
+  }
+
+  const choice = response.choices[0];
+
+  if (!choice.message?.content) {
+    throw makeError("Groq returned an empty funding response. Please try again.", 500);
+  }
+
+  try {
+    const parsed = JSON.parse(choice.message.content);
+    return parsed.matches;
+  } catch {
+    console.error("🔴  [Groq Funding] JSON parse failed:", choice.message.content);
+    throw makeError("Groq returned a malformed funding response. Please try again.", 500);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // STRATEGY CONTROLLERS — Public API (called by route handlers)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -561,9 +726,12 @@ export const analyzeBusinessIdea = async (businessIdea) => {
     case "anthropic":
       report = await callAnthropic(businessIdea);
       break;
+    case "groq":
+      report = await callGroq(businessIdea);
+      break;
     default:
       throw makeError(
-        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai' or 'anthropic'.`,
+        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai', 'anthropic', or 'groq'.`,
         500
       );
   }
@@ -595,9 +763,12 @@ export const chatWithAssistant = async (messages) => {
     case "anthropic":
       reply = await chatAnthropic(messages);
       break;
+    case "groq":
+      reply = await chatGroq(messages);
+      break;
     default:
       throw makeError(
-        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai' or 'anthropic'.`,
+        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai', 'anthropic', or 'groq'.`,
         500
       );
   }
@@ -626,9 +797,12 @@ export const matchFunding = async (userProfile) => {
     case "anthropic":
       matches = await fundingAnthropic(userProfile);
       break;
+    case "groq":
+      matches = await fundingGroq(userProfile);
+      break;
     default:
       throw makeError(
-        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai' or 'anthropic'.`,
+        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai', 'anthropic', or 'groq'.`,
         500
       );
   }
@@ -817,6 +991,68 @@ const planAnthropic = async (planData) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BUSINESS PLAN BRANCH C: Groq — Structured Outputs via JSON mode
+// ─────────────────────────────────────────────────────────────────────────────
+
+const planGroq = async (planData) => {
+  if (!config.groq.apiKey) {
+    throw makeError(
+      'AI_PROVIDER is set to "groq" but GROQ_API_KEY is missing from your .env file.',
+      500
+    );
+  }
+
+  const client = new OpenAI({
+    apiKey: config.groq.apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+
+  const inputSummary =
+    `Business Name: ${planData.businessName}\n` +
+    `Business Idea: ${planData.businessIdea}\n` +
+    `Legal Structure: ${planData.structure}\n` +
+    `Location: ${planData.location}`;
+
+  console.log(`📄  [Groq] Generating business plan for: "${planData.businessName}"...`);
+
+  let response;
+  try {
+    const systemPromptWithSchema = `${BUSINESS_PLAN_SYSTEM_PROMPT}\n\nYou MUST respond with a valid JSON object matching this schema:\n${JSON.stringify(businessPlanOpenAiJsonSchema.schema, null, 2)}`;
+    response = await client.chat.completions.create({
+      model: config.groq.model,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPromptWithSchema },
+        {
+          role: "user",
+          content: `Please generate a complete 1-page business plan for the following:\n\n${inputSummary}`,
+        },
+      ],
+      max_tokens: 2500,
+    });
+  } catch (apiError) {
+    console.error("🔴  [Groq Plan] API call failed:", apiError.message);
+    throw makeError(
+      "Failed to connect to Groq. Please check your API key and try again.",
+      502
+    );
+  }
+
+  const choice = response.choices[0];
+
+  if (!choice.message?.content) {
+    throw makeError("Groq returned an empty business plan. Please try again.", 500);
+  }
+
+  try {
+    return JSON.parse(choice.message.content);
+  } catch {
+    console.error("🔴  [Groq Plan] JSON parse failed:", choice.message.content);
+    throw makeError("Groq returned a malformed business plan. Please try again.", 500);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC EXPORT: generateBusinessPlan
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -838,9 +1074,12 @@ export const generateBusinessPlan = async (planData) => {
     case "anthropic":
       plan = await planAnthropic(planData);
       break;
+    case "groq":
+      plan = await planGroq(planData);
+      break;
     default:
       throw makeError(
-        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai' or 'anthropic'.`,
+        `Unknown AI provider: "${provider}". Set AI_PROVIDER to 'openai', 'anthropic', or 'groq'.`,
         500
       );
   }
