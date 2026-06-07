@@ -14,9 +14,14 @@
 import "./app/core/config.js"; // Must be first — validates env vars before anything else
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { config } from "./app/core/config.js";
 import apiRouter from "./app/api/index.js";
 import { errorHandler } from "./app/utils/errorHandler.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // App Initialization
@@ -44,6 +49,11 @@ app.use((req, _res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Routes
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Serve Interactive Sandbox Homepage at root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "app", "views", "sandbox.html"));
+});
 
 // Mount all API routes under the /api prefix
 app.use("/api", apiRouter);

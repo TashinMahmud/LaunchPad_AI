@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaunchPad AI — Interactive Sandbox</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, #0d1117 0%, #07090e 100%);
+    }
+    .glass {
+      background: rgba(13, 17, 23, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px rgba(255, 255, 255, 0.08) solid;
+    }
+    .glow-purple:hover {
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
+    }
+    .glow-cyan:hover {
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+    }
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-violet-500/20">
+          L
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
+            LaunchPad AI
+          </h1>
+          <p class="text-xs text-slate-400 font-medium">Interactive API Sandbox & Demo</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Live Demo Active
+        </span>
+        <span class="text-xs text-slate-500 font-mono">v1.0.0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Interactive Form Panel -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+      
+      <!-- Tab Selector -->
+      <div class="glass p-1.5 rounded-2xl flex flex-wrap gap-1">
+        <button onclick="switchTab('analyze')" id="btn-tab-analyze" class="tab-btn flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/10">
+          💡 Analyze Idea
+        </button>
+        <button onclick="switchTab('chat')" id="btn-tab-chat" class="tab-btn flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          💬 Onboarding Chat
+        </button>
+        <button onclick="switchTab('funding')" id="btn-tab-funding" class="tab-btn flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          💰 Funding Match
+        </button>
+        <button onclick="switchTab('plan')" id="btn-tab-plan" class="tab-btn flex-1 min-w-[120px] px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          📄 Business Plan
+        </button>
+      </div>
+
+      <!-- Tab Content: Analyze -->
+      <div id="tab-analyze" class="tab-content flex flex-col gap-5 glass p-6 sm:p-8 rounded-3xl shadow-xl">
+        <div>
+          <h2 class="text-xl font-bold text-white mb-1">Business Idea Analyzer</h2>
+          <p class="text-sm text-slate-400">Submit a startup concept to get a full SWOT analysis, financial estimates, and market demand breakdown.</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Business Idea Description</label>
+          <textarea id="analyze-idea-input" rows="5" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-sm focus:outline-none focus:border-violet-500 transition-colors placeholder:text-slate-600" placeholder="Describe your business idea in detail (e.g. A mobile app connecting local organic farmers directly with city consumers for same-day delivery...)"></textarea>
+        </div>
+        <button onclick="submitAnalyze()" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 active:scale-[0.99] flex items-center justify-center gap-2 glow-purple">
+          <span>Run AI Analysis</span>
+          <svg id="analyze-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </button>
+      </div>
+
+      <!-- Tab Content: Chat -->
+      <div id="tab-chat" class="tab-content hidden flex flex-col gap-5 glass p-6 sm:p-8 rounded-3xl shadow-xl h-[500px]">
+        <div class="flex-none">
+          <h2 class="text-xl font-bold text-white mb-1">Chat Coach (Alex)</h2>
+          <p class="text-sm text-slate-400">Interactive onboarding chat. Alex will ask 4 guiding questions to form your business idea.</p>
+        </div>
+        <!-- Chat History -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto bg-slate-950/80 border border-slate-900/50 rounded-2xl p-4 flex flex-col gap-4">
+          <div class="flex gap-3 max-w-[85%] self-start">
+            <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white">A</div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none px-4 py-2.5 text-sm text-slate-200">
+              Hi there! I'm Alex, your business coach. What kind of business idea are you dreaming of launching? I can help you flesh it out!
+            </div>
+          </div>
+        </div>
+        <!-- Input Form -->
+        <div class="flex gap-2 flex-none">
+          <input type="text" id="chat-input" onkeypress="handleChatKey(event)" class="flex-1 bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-3 text-slate-200 text-sm focus:outline-none focus:border-violet-500 transition-colors placeholder:text-slate-650" placeholder="Type your message to Alex...">
+          <button onclick="submitChat()" class="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 rounded-xl transition-all duration-200 active:scale-[0.98]">Send</button>
+        </div>
+      </div>
+
+      <!-- Tab Content: Funding -->
+      <div id="tab-funding" class="tab-content hidden flex flex-col gap-5 glass p-6 sm:p-8 rounded-3xl shadow-xl">
+        <div>
+          <h2 class="text-xl font-bold text-white mb-1">Funding Program Matcher</h2>
+          <p class="text-sm text-slate-400">Find real US grants, microloans, and SBA programs tailored to your startup stage and credit rating.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Business Type</label>
+            <input type="text" id="funding-type" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. Organic farming, SaaS app">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Location (City, ST)</label>
+            <input type="text" id="funding-location" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. Austin, TX">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Startup Stage</label>
+            <input type="text" id="funding-stage" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. Pre-revenue, Idea">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Credit Estimate</label>
+            <select id="funding-credit" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500">
+              <option value="Excellent">Excellent (720+)</option>
+              <option value="Good" selected>Good (680-719)</option>
+              <option value="Fair">Fair (620-679)</option>
+              <option value="Poor">Poor (Under 620)</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="submitFunding()" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 glow-purple">
+          <span>Find Funding Matches</span>
+          <svg id="funding-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </button>
+      </div>
+
+      <!-- Tab Content: Plan -->
+      <div id="tab-plan" class="tab-content hidden flex flex-col gap-5 glass p-6 sm:p-8 rounded-3xl shadow-xl">
+        <div>
+          <h2 class="text-xl font-bold text-white mb-1">Business Plan Generator</h2>
+          <p class="text-sm text-slate-400">Generate a structured 1-page business plan draft based on your profile inputs.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Business Name</label>
+            <input type="text" id="plan-name" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. FreshConnect LLC">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Your Email</label>
+            <input type="email" id="plan-email" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. founder@example.com">
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Legal Structure</label>
+            <select id="plan-structure" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500">
+              <option value="LLC">LLC</option>
+              <option value="Corporation">Corporation</option>
+              <option value="Sole Proprietorship">Sole Proprietorship</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Location (City, ST)</label>
+            <input type="text" id="plan-location" class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" placeholder="e.g. Austin, TX">
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Business Idea Description</label>
+          <textarea id="plan-idea" rows="3" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500 placeholder:text-slate-650" placeholder="Give a brief summary of the business concept..."></textarea>
+        </div>
+        <button onclick="submitPlan()" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 glow-purple">
+          <span>Generate Business Plan</span>
+          <svg id="plan-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Live Output Monitor -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Response Monitor</h3>
+        <span id="response-status" class="text-xs font-semibold text-slate-500 font-mono">IDLE</span>
+      </div>
+      <div class="flex-1 min-h-[400px] lg:min-h-[600px] bg-slate-950 border border-slate-850 rounded-3xl p-5 flex flex-col gap-4 shadow-xl">
+        <div class="flex items-center gap-2 border-b border-slate-900 pb-3 flex-none">
+          <div class="h-2 w-2 rounded-full bg-slate-700" id="monitor-dot"></div>
+          <span class="text-xs text-slate-500 font-mono" id="monitor-path">GET /api/health</span>
+        </div>
+        <pre class="flex-1 overflow-auto text-cyan-400 font-mono text-[11px] leading-relaxed select-text" id="json-output">// Responses from the server will stream here in real time...</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950/20 py-6 text-center text-xs text-slate-600">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>© 2026 LaunchPad AI. All rights reserved.</p>
+      <div class="flex gap-4">
+        <a href="https://github.com/TashinMahmud/LaunchPad_AI" target="_blank" class="hover:text-slate-400 transition-colors">GitHub Repository</a>
+        <a href="/api/health" target="_blank" class="hover:text-slate-400 transition-colors">Health Endpoint</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching logic
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-gradient-to-r', 'from-violet-600', 'to-indigo-600', 'text-white', 'shadow-md', 'shadow-violet-500/10');
+        btn.classList.add('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800/40');
+      });
+
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-tab-${tab}`);
+      activeBtn.classList.add('bg-gradient-to-r', 'from-violet-600', 'to-indigo-600', 'text-white', 'shadow-md', 'shadow-violet-500/10');
+      activeBtn.classList.remove('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800/40');
+    }
+
+    // Monitor logger
+    const jsonOutput = document.getElementById('json-output');
+    const monitorPath = document.getElementById('monitor-path');
+    const monitorDot = document.getElementById('monitor-dot');
+    const responseStatus = document.getElementById('response-status');
+
+    function logStart(method, path) {
+      monitorPath.innerText = `${method} ${path}`;
+      monitorDot.className = 'h-2 w-2 rounded-full bg-yellow-500 animate-ping';
+      responseStatus.innerText = 'WAITING';
+      responseStatus.className = 'text-xs font-semibold text-yellow-500 font-mono';
+      jsonOutput.innerText = '// Sending request to Render backend...\n// Waiting for AI compilation (usually takes 5-25 seconds)...';
+      jsonOutput.className = 'flex-1 overflow-auto text-yellow-400 font-mono text-[11px] leading-relaxed';
+    }
+
+    function logSuccess(data) {
+      monitorDot.className = 'h-2 w-2 rounded-full bg-emerald-500';
+      responseStatus.innerText = 'SUCCESS (200)';
+      responseStatus.className = 'text-xs font-semibold text-emerald-500 font-mono';
+      jsonOutput.innerText = JSON.stringify(data, null, 2);
+      jsonOutput.className = 'flex-1 overflow-auto text-cyan-400 font-mono text-[11px] leading-relaxed';
+    }
+
+    function logError(err) {
+      monitorDot.className = 'h-2 w-2 rounded-full bg-rose-500';
+      responseStatus.innerText = 'ERROR';
+      responseStatus.className = 'text-xs font-semibold text-rose-500 font-mono';
+      jsonOutput.innerText = JSON.stringify(err, null, 2);
+      jsonOutput.className = 'flex-1 overflow-auto text-rose-400 font-mono text-[11px] leading-relaxed';
+    }
+
+    // Chat history state
+    const chatMessages = [];
+
+    // Send handlers
+    async function submitAnalyze() {
+      const idea = document.getElementById('analyze-idea-input').value;
+      if (!idea.trim()) return alert("Please enter your business idea description.");
+
+      const spinner = document.getElementById('analyze-spinner');
+      spinner.classList.remove('hidden');
+      logStart('POST', '/api/analyze-idea');
+
+      try {
+        const res = await fetch('/api/analyze-idea', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessIdea: idea })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          logSuccess(data);
+        } else {
+          logError(data);
+        }
+      } catch (error) {
+        logError({ success: false, message: error.message });
+      } finally {
+        spinner.classList.add('hidden');
+      }
+    }
+
+    async function submitFunding() {
+      const type = document.getElementById('funding-type').value;
+      const location = document.getElementById('funding-location').value;
+      const stage = document.getElementById('funding-stage').value;
+      const credit = document.getElementById('funding-credit').value;
+
+      if (!type || !location || !stage) return alert("Please fill in all funding profile details.");
+
+      const spinner = document.getElementById('funding-spinner');
+      spinner.classList.remove('hidden');
+      logStart('POST', '/api/match-funding');
+
+      try {
+        const res = await fetch('/api/match-funding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userProfile: {
+              businessType: type,
+              location: location,
+              stage: stage,
+              creditEstimate: credit
+            }
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          logSuccess(data);
+        } else {
+          logError(data);
+        }
+      } catch (error) {
+        logError({ success: false, message: error.message });
+      } finally {
+        spinner.classList.add('hidden');
+      }
+    }
+
+    async function submitPlan() {
+      const name = document.getElementById('plan-name').value;
+      const email = document.getElementById('plan-email').value;
+      const idea = document.getElementById('plan-idea').value;
+      const structure = document.getElementById('plan-structure').value;
+      const location = document.getElementById('plan-location').value;
+
+      if (!name || !email || !idea || !location) return alert("Please fill in all plan details.");
+
+      const spinner = document.getElementById('plan-spinner');
+      spinner.classList.remove('hidden');
+      logStart('POST', '/api/generate-business-plan');
+
+      try {
+        const res = await fetch('/api/generate-business-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userEmail: email,
+            businessName: name,
+            businessIdea: idea,
+            structure: structure,
+            location: location
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          logSuccess(data);
+        } else {
+          logError(data);
+        }
+      } catch (error) {
+        logError({ success: false, message: error.message });
+      } finally {
+        spinner.classList.add('hidden');
+      }
+    }
+
+    // Chat logic
+    function handleChatKey(event) {
+      if (event.key === 'Enter') {
+        submitChat();
+      }
+    }
+
+    async function submitChat() {
+      const inputEl = document.getElementById('chat-input');
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = '';
+
+      // Add user bubble
+      appendMessageBubble('U', text, 'bg-slate-900 border border-slate-800 rounded-tr-none self-end');
+      chatMessages.push({ role: 'user', content: text });
+
+      logStart('POST', '/api/chat-onboarding');
+
+      try {
+        const res = await fetch('/api/chat-onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: chatMessages })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          logSuccess(data);
+          appendMessageBubble('A', data.reply, 'bg-slate-900/40 border border-slate-800/80 rounded-tl-none self-start');
+          chatMessages.push({ role: 'assistant', content: data.reply });
+        } else {
+          logError(data);
+          appendMessageBubble('!', data.message || "An error occurred.", 'bg-rose-500/10 border border-rose-500/20 rounded-tl-none self-start text-rose-450');
+        }
+      } catch (error) {
+        logError({ success: false, message: error.message });
+      }
+    }
+
+    function appendMessageBubble(initial, text, classes) {
+      const container = document.getElementById('chat-messages');
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex gap-3 max-w-[85%] ${classes.includes('self-end') ? 'self-end flex-row-reverse' : 'self-start'}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = `h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs text-white flex-shrink-0 ${initial === 'U' ? 'bg-gradient-to-tr from-cyan-600 to-emerald-500 shadow-md shadow-cyan-500/10' : 'bg-gradient-to-tr from-violet-600 to-indigo-600 shadow-md shadow-violet-500/10'}`;
+      avatar.innerText = initial;
+
+      const bubble = document.createElement('div');
+      bubble.className = `${classes} px-4 py-2.5 text-sm text-slate-200`;
+      bubble.innerText = text;
+
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubble);
+      container.appendChild(wrapper);
+
+      // Auto scroll
+      container.scrollTop = container.scrollHeight;
+    }
+  </script>
+</body>
+</html>
