@@ -56,7 +56,7 @@ export const config = {
   groq: {
     /** May be undefined — checked at runtime inside the service. */
     apiKey: process.env.GROQ_API_KEY,
-    model: process.env.GROQ_MODEL || "llama-3.3-70b-specdec",
+    model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
   },
 
   /**
